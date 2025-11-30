@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { NextBusBasic } from "../../models/ttc.js";
 import { store } from "../../store/index.js";
 import { subwayDbSelectors } from "../../store/suwbayDb/slice.js";
-import { getStopFromStopId } from "../../store/ttcStopsDb.js";
+import { getStop } from "../../store/ttcStopsDb.js";
 import { TtcAlertList } from "../alerts/TtcAlertList.js";
 import { BookmarkButton } from "../bookmarks/BookmarkButton.js";
 import CountdownGroup from "../countdown/CountdownGroup.js";
@@ -30,7 +30,7 @@ function FetchTtcLineStop(props: {
   const stopData = useQuery({
     queryKey: ["stop-data"],
     queryFn: async () => {
-      const stopData = await getStopFromStopId(props.stopNum);
+      const stopData = await getStop(props.stopNum.toString());
       return stopData ?? null;
     },
   });
@@ -47,7 +47,8 @@ function FetchTtcLineStop(props: {
       `ttc-line-stop-${props.line}-${props.stopNum}`,
       lastUpdatedAt.toString(),
     ],
-    enabled: props.line > 6,
+    enabled: props.line > 6 && !!stopData.data?.tag,
+    retry: 1,
   });
 
   const ttcBusPredictionsResponseBasic = useQuery({
@@ -56,7 +57,9 @@ function FetchTtcLineStop(props: {
       `ttc-bus-basic-${props.line}-${props.stopNum}`,
       lastUpdatedAt.toString(),
     ],
-    enabled: props.line > 6 && !!ttcBusPredictionsResponse.error,
+    enabled:
+      props.line > 6 &&
+      (!stopData.data?.tag || !!ttcBusPredictionsResponse.error),
   });
 
   const fetchPredictions = useCallback(() => {
@@ -100,7 +103,9 @@ function FetchTtcLineStop(props: {
     const data = ttcBusPredictionsResponseBasic.data?.[0];
     const etaArray = ttcBusPredictionsResponseBasic.data;
     if (!data) {
-      return;
+      return ttcBusPredictionsResponseBasic.isFetched ? (
+        <Text> {t("reminder.noEta")}</Text>
+      ) : null;
     }
 
     if (!etaArray || etaArray.length === 0) {
@@ -161,8 +166,8 @@ function FetchTtcLineStop(props: {
         />
       </div>
       {ttcSubwayEtas}
-      {ttcBusEtaBasic}
       {ttcBusEta}
+      {!ttcBusEta && ttcBusEtaBasic}
       <RawDisplay
         data={
           ttcBusPredictionsResponseBasic.data ||

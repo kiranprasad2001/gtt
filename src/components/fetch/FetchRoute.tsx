@@ -31,6 +31,7 @@ function RouteInfo(props: { line: number }): JSX.Element {
   const ttcRouteResponse = useQuery({
     ...ttcRoute(props.line),
     queryKey: [`ttc-route-${props.line}`, lastUpdatedAt.toString()],
+    retry: 1,
   });
 
   const ttcRouteBasicResponse = useQuery({

@@ -86,7 +86,7 @@ export async function getStopFromStopId(
   return undefined;
 }
 
-export async function getStop(key) {
+export async function getStop(key: string) {
   return (await dbPromise).get("stops", key);
 }
 export async function addStop(val) {
@@ -105,7 +105,7 @@ export async function addStops(vals) {
     });
   });
 }
-export async function del(key) {
+export async function del(key: string) {
   return (await dbPromise).delete("stops", key);
 }
 export async function clear() {

@@ -17,7 +17,7 @@ const parseRouteTitle = (input: string) => {
 };
 
 export function RoutesInfo() {
-  const lineData = useQuery(ttcLines);
+  const lineData = useQuery({ ...ttcLines, retry: 1 });
   const lineDataBasic = useQuery({
     ...ttcLinesBasic,
     enabled: !!lineData.error,

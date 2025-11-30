@@ -26,17 +26,6 @@ export function BookmarkCardEta(props: { item: LineStopEta }) {
     refetchInterval: 60 * 1000,
   });
 
-  const dataFetched = useMemo(
-    () =>
-      stationType === "bus"
-        ? getStopPredictionsResponse.isSuccess
-        : getSubwayPredictionsResponse.isSuccess,
-    [
-      getStopPredictionsResponse.isSuccess,
-      getSubwayPredictionsResponse.isSuccess,
-    ]
-  );
-
   const unifiedEta = useMemo(() => {
     const data =
       stationType === "bus"
@@ -60,13 +49,11 @@ export function BookmarkCardEta(props: { item: LineStopEta }) {
 
   const filteredEta = useMemo(() => {
     if (stationType === "bus") {
-      if (Array.isArray(props.item.line)) {
-        return unifiedEta.filter((eta) =>
-          props.item.line.includes(Number.parseInt(eta.branch).toString())
-        );
-      }
-      return unifiedEta.filter(
-        (eta) => Number.parseInt(eta.branch).toString() === props.item.line
+      const busLines = Array.isArray(props.item.line)
+        ? props.item.line.map((line) => Number.parseInt(line))
+        : [Number.parseInt(props.item.line)];
+      return unifiedEta.filter((eta) =>
+        busLines.includes(Number.parseInt(eta.branch))
       );
     }
     return undefined;
@@ -108,9 +95,6 @@ export function BookmarkCardEta(props: { item: LineStopEta }) {
     );
   }, [item, props.item.line]);
 
-  if (item.type !== "ttc-subway" && dataFetched && filteredEta?.length === 0) {
-    return null;
-  }
   return (
     <EtaCard
       id={props.item.stopName + props.item.stopTag}
