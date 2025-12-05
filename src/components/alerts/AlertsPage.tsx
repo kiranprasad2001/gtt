@@ -43,7 +43,7 @@ export default function TtcAlertList() {
       </TabList>
       <div className={enabledTab === "now" ? "" : style.hidden}>
         <SubwayClosures startDate={currentDate} />
-        {/* <CurrentAlerts /> */}
+        {/*<CurrentAlerts />*/}
         <AllBskyAlerts />
       </div>
       <div className={enabledTab === "weekend" ? "" : style.hidden}>
