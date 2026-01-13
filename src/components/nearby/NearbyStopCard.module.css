@@ -1,0 +1,92 @@
+/* NearbyStopCard Styles */
+
+.nearbyCard {
+  list-style: none;
+  margin-bottom: 0.75rem;
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.card {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.agencyAndName {
+  display: flex;
+  align-items: center;
+}
+
+.stopName {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.distance {
+  font-size: 0.875rem;
+  color: var(--colorNeutralForeground3);
+}
+
+.arrivals {
+  padding: 0.5rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.arrivalRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.line {
+  font-weight: 600;
+  min-width: 4rem;
+}
+
+.destination {
+  flex: 1;
+  color: var(--colorNeutralForeground2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ghostIcon {
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+}
+
+.liveIcon {
+  color: #10b981;
+  display: flex;
+  align-items: center;
+}
+
+.loading {
+  color: var(--colorNeutralForeground3);
+  font-style: italic;
+}
+
+.noArrivals {
+  color: var(--colorNeutralForeground3);
+  font-style: italic;
+}

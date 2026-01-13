@@ -1,5 +1,5 @@
 import { Agent } from "@atproto/api";
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 
 // import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import type {
@@ -15,6 +15,9 @@ import type {
   SubwayStations,
   SubwayStop,
 } from "../../models/ttc.js";
+import type { ArrivalPrediction } from "../../models/transit.js";
+import type { UnifiedStop } from "../../models/unified.js";
+import { normalizeGoTransit, normalizeTtc, normalizeTtcSubway } from "./adapters.js";
 
 export const ttcStopPrediction = (stopId: number) =>
   queryOptions<EtaPredictionJson>({
@@ -346,3 +349,74 @@ export const getYrtStops = queryOptions<
   },
   staleTime: 24 * 60 * 60 * 1000,
 });
+
+// ============================================
+// GTA Unified Queries
+// ============================================
+
+/**
+ * Cloudflare Worker URL for GTA transit proxy
+ * TODO: Update this to your deployed worker URL
+ */
+const GTA_PROXY_URL = import.meta.env.VITE_GTA_PROXY_URL || 'https://tobus.kiranprasad2001.workers.dev';
+
+/**
+ * GO Transit arrivals query
+ */
+export const goTransitArrivals = (stopCode: string) =>
+  queryOptions<ArrivalPrediction[]>({
+    queryKey: [`go-transit-arrivals-${stopCode}`],
+    queryFn: async () => {
+      const response = await fetch(
+        `${GTA_PROXY_URL}?agency=go&stopCode=${encodeURIComponent(stopCode)}`
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      return normalizeGoTransit(data);
+    },
+    refetchInterval: 60 * 1000,
+    placeholderData: (prev) => prev,
+  });
+
+/**
+ * Unified GTA arrivals query options based on agency
+ */
+export const gtaArrivalsQuery = (stop: UnifiedStop) => {
+  switch (stop.agency) {
+    case 'go':
+      return goTransitArrivals(stop.code);
+
+    case 'ttc':
+    default:
+      // For TTC, use the existing stop prediction but normalize to ArrivalPrediction
+      return queryOptions<ArrivalPrediction[]>({
+        queryKey: [`gta-ttc-arrivals-${stop.id}`],
+        queryFn: async () => {
+          const response = await fetch(
+            `https://webservices.umoiq.com/service/publicJSONFeed?command=predictions&a=ttc&stopId=${stop.code}`
+          );
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          const data = await response.json();
+          return normalizeTtc(data);
+        },
+        refetchInterval: 60 * 1000,
+        placeholderData: (prev) => prev,
+      });
+  }
+};
+
+/**
+ * Hook to get unified arrivals for any GTA stop
+ */
+export function useGtaArrivals(stop: UnifiedStop | null) {
+  return useQuery({
+    ...gtaArrivalsQuery(stop ?? { id: '', code: '', agency: 'ttc', name: '', lat: 0, lon: 0 }),
+    enabled: !!stop,
+  });
+}

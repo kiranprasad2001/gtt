@@ -1,6 +1,7 @@
 {
   "name": "tobus",
   "compatibility_date": "2025-11-02",
+  "main": "workers/gta-proxy.js",
   "assets": {
     "directory": "./dist"
   }

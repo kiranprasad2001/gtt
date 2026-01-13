@@ -1,86 +1,171 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { Card, CardHeader, Badge } from "@fluentui/react-components";
+import {
+  LocationLive20Regular,
+  Warning20Regular,
+} from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
-import type { StopWithDistance } from "../../models/db.js";
-import type { EtaBusWithID } from "../../models/etaObjects.js";
-import { EtaCard } from "../etaCard/EtaCard.js";
-import { ttcStopPrediction, ttcSubwayPredictions } from "../fetch/queries.js";
-import { etaParser } from "../parser/etaParser.js";
+import type { ArrivalPrediction } from "../../models/transit.js";
+import { AGENCY_CONFIG, type UnifiedStop } from "../../models/unified.js";
+import { CountdownSec } from "../countdown/CountdownSec.js";
+import { useGtaArrivals } from "../fetch/queries.js";
+import style from "./NearbyStopCard.module.css";
 
-export default function NearbyStopCard({ stop }: { stop: StopWithDistance }) {
-  const { t } = useTranslation();
+/**
+ * Props for NearbyStopCard - uses UnifiedStop with distance info
+ */
+interface NearbyStopCardProps {
+  stop: UnifiedStop & {
+    realDistance: number;
+    title?: string;
+    lines?: string[];
+    directions?: string;
+  };
+}
 
-  const queryConfig =
-    stop.type === "ttc-subway"
-      ? {
-          ...ttcSubwayPredictions(Number.parseInt(stop.id)),
-          queryKey: [`ttc-subway-stop-${stop.id}`],
-        }
-      : {
-          ...ttcStopPrediction(Number.parseInt(stop.id)),
-          queryKey: [`nearby-stop-${stop.id}`],
-        };
-
-  const getStopPredictionsResponse = useQuery(queryConfig);
-
-  const unifiedEta = useMemo(() => {
-    if (stop.type === "ttc-subway") {
-      return [];
-    }
-    if (getStopPredictionsResponse.data) {
-      const etaDb = etaParser(getStopPredictionsResponse.data);
-
-      let templist: EtaBusWithID[] = [];
-      for (const list of etaDb) {
-        if (list.etas) {
-          templist = templist.concat(list.etas);
-        }
-      }
-      return templist.sort((a, b) => a.epochTime - b.epochTime);
-    }
-    return [];
-  }, [getStopPredictionsResponse.data]);
-
-  const lines = useMemo(() => {
-    if (stop.type === "ttc-subway") {
-      if (getStopPredictionsResponse.data) {
-        return [getStopPredictionsResponse.data?.[0].line];
-      }
-      return [];
-    }
-    return stop.lines;
-  }, [stop, getStopPredictionsResponse.data]);
-
-  const url = useMemo(() => {
-    if (stop.type === "ttc-subway") {
-      if (lines[0] && stop.id) {
-        return `/ttc/lines/${lines[0]}/${stop.id}`;
-      }
-      return "";
-    }
-    return `/stops/${stop.id}`;
-  }, [stop, lines]);
-
-  const direction = useMemo(() => {
-    if (stop.type === "ttc-subway") {
-      return undefined;
-    }
-    return stop.directions;
-  }, [stop, getStopPredictionsResponse.data]);
-
-  const distanceInMetres = stop.realDistance.toPrecision(4);
+/**
+ * Agency badge component showing the transit agency
+ */
+function AgencyBadge({ agency }: { agency: UnifiedStop['agency'] }) {
+  const config = AGENCY_CONFIG[agency];
 
   return (
-    <EtaCard
-      key={stop.id}
-      direction={direction}
-      lines={lines}
-      name={`${stop.title}\n${t("nearby.mAway", { distanceInMetres })}`}
-      id={stop.id}
-      stopUrl={url}
-      etas={unifiedEta}
-      editable={false}
-    />
+    <Badge
+      appearance="filled"
+      style={{
+        backgroundColor: config.bgColor,
+        color: config.color,
+        marginRight: '0.5rem',
+      }}
+    >
+      {config.label}
+    </Badge>
   );
+}
+
+/**
+ * Status icon showing whether arrival is live tracked or scheduled only
+ */
+function ArrivalStatusIcon({ isGhost }: { isGhost: boolean }) {
+  if (isGhost) {
+    return (
+      <span title="Scheduled only (not live tracked)" className={style.ghostIcon}>
+        <Warning20Regular />
+      </span>
+    );
+  }
+
+  return (
+    <span title="Live tracked" className={style.liveIcon}>
+      <LocationLive20Regular />
+    </span>
+  );
+}
+
+/**
+ * Single arrival row in the card
+ */
+function ArrivalRow({ arrival }: { arrival: ArrivalPrediction }) {
+  return (
+    <div className={style.arrivalRow}>
+      <ArrivalStatusIcon isGhost={arrival.isGhost} />
+      <span className={style.line}>{arrival.line}</span>
+      <span className={style.destination}>{arrival.destination}</span>
+      <CountdownSec second={arrival.timeMinutes * 60} />
+    </div>
+  );
+}
+
+/**
+ * NearbyStopCard - Unified card for displaying nearby stops from any GTA transit agency
+ * 
+ * Features:
+ * - Agency badge (TTC red, GO green, etc.)
+ * - Ghost icon (⚠️) for scheduled-only arrivals
+ * - Live icon (📡) for real-time tracked arrivals
+ */
+export default function NearbyStopCard({ stop }: NearbyStopCardProps) {
+  const { t } = useTranslation();
+
+  // Use the unified GTA arrivals hook
+  const { data: arrivals, isLoading } = useGtaArrivals(stop);
+
+  const distanceInMetres = stop.realDistance.toPrecision(4);
+  const displayName = stop.title || stop.name;
+
+  // Build URL based on agency
+  const stopUrl = stop.agency === 'ttc'
+    ? `/stops/${stop.code}`
+    : `/${stop.agency}/stops/${stop.code}`;
+
+  return (
+    <li className={style.nearbyCard}>
+      <Link to={stopUrl} className={style.cardLink}>
+        <Card className={style.card}>
+          <CardHeader
+            header={
+              <div className={style.headerContent}>
+                <div className={style.agencyAndName}>
+                  <AgencyBadge agency={stop.agency} />
+                  <span className={style.stopName}>
+                    {displayName}
+                  </span>
+                </div>
+                <span className={style.distance}>
+                  {t("nearby.mAway", { distanceInMetres })}
+                </span>
+              </div>
+            }
+          />
+
+          <div className={style.arrivals}>
+            {isLoading && (
+              <div className={style.loading}>Loading...</div>
+            )}
+
+            {!isLoading && arrivals && arrivals.length === 0 && (
+              <div className={style.noArrivals}>No upcoming arrivals</div>
+            )}
+
+            {arrivals?.slice(0, 3).map((arrival, index) => (
+              <ArrivalRow
+                key={`${arrival.line}-${arrival.timeMinutes}-${index}`}
+                arrival={arrival}
+              />
+            ))}
+          </div>
+        </Card>
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * Legacy export for backward compatibility
+ * Wraps the old StopWithDistance format
+ */
+export function NearbyStopCardLegacy({ stop }: {
+  stop: {
+    id: string;
+    title: string;
+    realDistance: number;
+    lines?: string[];
+    directions?: string;
+    type?: string;
+  };
+}) {
+  // Convert legacy format to UnifiedStop
+  const unifiedStop: UnifiedStop & { realDistance: number; title: string } = {
+    id: stop.id,
+    code: stop.id, // Legacy used id as code
+    agency: stop.type === 'ttc-subway' ? 'ttc' : 'ttc',
+    name: stop.title,
+    lat: 0, // Not available in legacy format
+    lon: 0,
+    realDistance: stop.realDistance,
+    title: stop.title,
+  };
+
+  return <NearbyStopCard stop={unifiedStop} />;
 }
