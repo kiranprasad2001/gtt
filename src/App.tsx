@@ -1,6 +1,6 @@
 import { Link as LinkFluent, Title1 } from "@fluentui/react-components";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router";
 
@@ -20,15 +20,24 @@ window.__TANSTACK_QUERY_CLIENT__ = queryClient;
 function App() {
   const [width, setWidth] = useState(window.innerWidth);
   const { t } = useTranslation();
+  const resizeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleResize = () => {
-    setWidth(window.innerWidth);
-  };
+  const handleResize = useCallback(() => {
+    if (resizeTimer.current) clearTimeout(resizeTimer.current);
+    resizeTimer.current = setTimeout(() => {
+      setWidth(window.innerWidth);
+    }, 150);
+  }, []);
 
   useEffect(() => {
     window.addEventListener("resize", handleResize, false);
     window.addEventListener("orientationchange", handleResize, false);
-  }, []);
+    return () => {
+      window.removeEventListener("resize", handleResize, false);
+      window.removeEventListener("orientationchange", handleResize, false);
+      if (resizeTimer.current) clearTimeout(resizeTimer.current);
+    };
+  }, [handleResize]);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -27,10 +27,18 @@ if (container) {
   );
 }
 
+// Throttle localStorage writes to avoid blocking the main thread on rapid dispatches
+let saveScheduled = false;
 store.subscribe(() => {
-  saveStopBookmarkState(store.getState().stopBookmarks);
-  saveSettingsState(store.getState().settings);
-  saveSubwayDbState(store.getState().subwayDb);
+  if (saveScheduled) return;
+  saveScheduled = true;
+  setTimeout(() => {
+    saveScheduled = false;
+    const state = store.getState();
+    saveStopBookmarkState(state.stopBookmarks);
+    saveSettingsState(state.settings);
+    saveSubwayDbState(state.subwayDb);
+  }, 1000);
 });
 
 // If you want to start measuring performance in your app, pass a function

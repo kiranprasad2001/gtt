@@ -47,7 +47,7 @@ export default function Nearby() {
     getSize().then((result) => {
       setNumber(result);
     });
-  });
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);

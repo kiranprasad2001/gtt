@@ -3,21 +3,18 @@ import {
   webDarkTheme,
   webLightTheme,
 } from "@fluentui/react-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+const darkMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 export function FluentTheme({ children }: { children: JSX.Element }) {
-  const [isDark, setIsDark] = useState(prefersDark);
+  const [isDark, setIsDark] = useState(darkMediaQuery.matches);
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
-  window
-    .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", () => {
-      toggleTheme();
-    });
+  useEffect(() => {
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    darkMediaQuery.addEventListener("change", handler);
+    return () => darkMediaQuery.removeEventListener("change", handler);
+  }, []);
 
   return (
     <FluentProvider theme={isDark ? webDarkTheme : webLightTheme}>

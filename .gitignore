@@ -26,3 +26,5 @@ dev-dist/*
 prev_conv.md
 .gemini
 .agent
+claude.md
+.gitignore

@@ -513,7 +513,7 @@ export default function LiveMap() {
           });
         }
       },
-      () => {},
+      () => { },
       { enableHighAccuracy: true, maximumAge: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
@@ -551,16 +551,23 @@ export default function LiveMap() {
   }, []);
 
   const currentZoom = view.zoom;
+  // Stabilize center to avoid continuous re-fetching (view.center is a new array ref on every pan)
+  const centerKey = useMemo(() => {
+    if (!view.center) return "";
+    const [lon, lat] = toLonLat(view.center as number[]);
+    // Round to ~100m precision to avoid thrashing
+    return `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  }, [view.center]);
+
   useEffect(() => {
     if (!stopsLoaded || currentZoom < 14) {
       setStopFeatures([]);
       return;
     }
-    const center = view.center;
-    if (!center) {
-      return;
-    }
-    const [cLon, cLat] = toLonLat(center as number[]);
+    if (!centerKey) return;
+    const [latStr, lonStr] = centerKey.split(",");
+    const cLat = Number(latStr);
+    const cLon = Number(lonStr);
     const range = Math.max(0.005, 0.04 / (currentZoom - 12));
     getStopsWithinRange(cLat, cLon, range).then((stops) => {
       setStopFeatures(
@@ -571,7 +578,7 @@ export default function LiveMap() {
         }))
       );
     });
-  }, [stopsLoaded, currentZoom, view.center]);
+  }, [stopsLoaded, currentZoom, centerKey]);
 
   // === Handlers ===
   const handleSearchSubmit = useCallback(() => {
@@ -656,16 +663,20 @@ export default function LiveMap() {
             zoom: 15,
           });
         },
-        () => {}
+        () => { }
       );
     }
   }, [userLocation]);
 
   // === Computed ===
+  // Cache Point geometries by vehicle ID to avoid re-allocating on every refresh
+  const vehicleGeomCache = useRef(new Map<string, { lat: number; lon: number; geom: Point }>());
+
   const filteredFeatures = useMemo(() => {
     if (!vehicles) {
       return [];
     }
+    const cache = vehicleGeomCache.current;
     return vehicles
       .filter((v) => {
         if (!activeAgencies.has("ttc")) {
@@ -688,11 +699,18 @@ export default function LiveMap() {
         }
         return true;
       })
-      .map((v) => ({
-        vehicle: v,
-        geometry: new Point(fromLonLat([v.lon, v.lat])),
-      }));
-  }, [vehicles, activeAgencies, routeFilter, selectedVehicle]);
+      .map((v) => {
+        const cached = cache.get(v.id);
+        let geom: Point;
+        if (cached && cached.lat === v.lat && cached.lon === v.lon) {
+          geom = cached.geom;
+        } else {
+          geom = new Point(fromLonLat([v.lon, v.lat]));
+          cache.set(v.id, { lat: v.lat, lon: v.lon, geom });
+        }
+        return { vehicle: v, geometry: geom };
+      });
+  }, [vehicles, activeAgencies, activeRouteTypes, routeFilter, selectedVehicle]);
 
   const vehicleCount = filteredFeatures.length;
 
