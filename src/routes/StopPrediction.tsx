@@ -8,7 +8,7 @@ export default function StopPrediction() {
   const stopNum = Number.parseInt(`${params.stopId}`);
 
   useEffect(() => {
-    document.title = `Stop ID ${stopNum} | GTT`;
+    document.title = `Stop ID ${stopNum} | GTA`;
   });
   return (
     <main className="stop-prediction-page">

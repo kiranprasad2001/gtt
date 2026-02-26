@@ -13,7 +13,7 @@
   },
   "home": {
     "title": {
-      "name": "GTT",
+      "name": "GTA",
       "tooltip": "Retourner à l'accueil"
     },
     "headline": "Vous verrez vos arrêts enregistrés ici.",
@@ -27,7 +27,7 @@
   "lines": {
     "ariaLabel": "entrer un numéro de ligne",
     "placeholder": "entrer un numéro de ligne",
-    "browserTitle": "Ligne {{lineNum}} | GTT",
+    "browserTitle": "Ligne {{lineNum}} | GTA",
     "title": "Entrer un numéro de ligne:",
     "number": "Ligne {{lineNum}}",
     "lineAndStopInfo": "Ligne {{lineNum}} Arrêt {{stopNum}} =",

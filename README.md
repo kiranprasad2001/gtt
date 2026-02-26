@@ -1,6 +1,6 @@
-# GTT (GTA Transit Tracker)
+# GTA (GTA Transit Tracker)
 
-An blazing-fast, unified transit tracking application for the Greater Toronto Area. GTT provides real-time vehicle positions, subway ETAs, and multi-agency support, all wrapped in a sleek, responsive map interface.
+An blazing-fast, unified transit tracking application for the Greater Toronto Area. GTA provides real-time vehicle positions, subway ETAs, and multi-agency support, all wrapped in a sleek, responsive map interface.
 
 ## Features
 

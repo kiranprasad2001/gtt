@@ -15,7 +15,7 @@
   },
   "home": {
     "title": {
-      "name": "GTT",
+      "name": "GTA",
       "tooltip": "Return home"
     },
     "headline": "You'll see saved stops here.",
@@ -29,7 +29,7 @@
   "lines": {
     "ariaLabel": "enter a line number",
     "placeholder": "enter a line number",
-    "browserTitle": "Line {{lineNum}} | GTT",
+    "browserTitle": "Line {{lineNum}} | GTA",
     "title": "Enter a line number:",
     "number": "Line {{lineNum}}",
     "lineAndStopInfo": "Line {{lineNum}} Stop {{stopNum}} =",

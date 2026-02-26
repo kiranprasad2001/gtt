@@ -1,5 +1,5 @@
 {
-  "name": "gtt",
+  "name": "gta",
   "compatibility_date": "2025-11-02",
   "main": "workers/gta-proxy.js",
   "assets": {
