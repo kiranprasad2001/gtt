@@ -1,0 +1,123 @@
+/* Kiranic Brand Tokens — Single Source of Truth
+ * Reference: kiranic.com (tailwind.config.mjs + BaseLayout.astro)
+ *
+ * Usage:
+ *   @import "kiranic-brand/tokens/tokens.css";
+ *   body { background: var(--kc-surface); color: var(--kc-text); }
+ *
+ * Dark mode: apply `.dark` class to <html> (matches kiranic convention).
+ */
+
+:root {
+  /* ─── Core palette ─── */
+  --kc-bg:          #292330;   /* dark surface */
+  --kc-surface:     #F5F5F4;   /* light surface */
+  --kc-teal:        #297081;   /* primary action */
+  --kc-teal-light:  #88BDC1;   /* hover, dark-mode link */
+  --kc-ochre:       #E29D35;   /* accent, CTA highlight */
+
+  /* ─── Semantic surfaces (light theme) ─── */
+  --kc-surface-0:   #F5F5F4;
+  --kc-surface-1:   #ffffff;
+  --kc-surface-2:   #ebeae6;
+  --kc-border:      #d4d2cc;
+  --kc-border-hover:#b8b5ad;
+
+  /* ─── Text (light theme) ─── */
+  --kc-text:        #0f172a;   /* slate-900 */
+  --kc-text-muted:  #475569;   /* slate-600 */
+  --kc-text-dim:    #94a3b8;   /* slate-400 */
+
+  /* ─── Semantic status ─── */
+  --kc-success: #2D8659;
+  --kc-warning: #E29D35;
+  --kc-error:   #C94444;
+  --kc-info:    #297081;
+
+  /* ─── Typography ─── */
+  --kc-font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --kc-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* ─── Radii & spacing ─── */
+  --kc-radius-sm: 6px;
+  --kc-radius:    10px;
+  --kc-radius-lg: 16px;
+
+  /* ─── Focus ring ─── */
+  --kc-focus: 0 0 0 3px rgba(41, 112, 129, 0.35);
+}
+
+/* ─── Dark theme (class strategy — matches kiranic) ─── */
+.dark,
+[data-theme="dark"] {
+  --kc-surface-0: #1a1722;
+  --kc-surface-1: #211e2b;
+  --kc-surface-2: #292330;
+  --kc-border:    #3b344a;
+  --kc-border-hover: #4d4560;
+
+  --kc-text:       #e2e8f0;   /* slate-200 */
+  --kc-text-muted: #94a3b8;   /* slate-400 */
+  --kc-text-dim:   #64748b;   /* slate-500 */
+}
+
+/* ─── Base reset (opt-in, low specificity) ─── */
+.kc-base,
+body.kc-base {
+  font-family: var(--kc-font-sans);
+  background: var(--kc-surface-0);
+  color: var(--kc-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.kc-base ::selection {
+  background: var(--kc-teal);
+  color: #fff;
+}
+
+/* ─── Reusable utilities ─── */
+.kc-btn-primary {
+  background: var(--kc-teal);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--kc-radius);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.kc-btn-primary:hover { background: #23606f; }
+.kc-btn-primary:active { transform: scale(0.98); }
+
+.kc-btn-ghost {
+  background: transparent;
+  color: var(--kc-text-muted);
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--kc-radius);
+  border: 1px solid var(--kc-border);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.kc-btn-ghost:hover {
+  color: var(--kc-text);
+  background: var(--kc-surface-2);
+}
+
+.kc-link {
+  color: var(--kc-teal);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.dark .kc-link { color: var(--kc-teal-light); }
+.kc-link:hover { text-decoration: underline; }
+
+.kc-card {
+  background: var(--kc-surface-1);
+  border: 1px solid var(--kc-border);
+  border-radius: var(--kc-radius-lg);
+  padding: 1.25rem;
+}
+
+.kc-mono { font-family: var(--kc-font-mono); }
